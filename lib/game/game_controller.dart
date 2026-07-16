@@ -41,6 +41,7 @@ class GameController extends ChangeNotifier {
   final List<FallenItem> fallenItems = [];
   bool boxPresent = false;
   bool flowerOnSill = true; // a flower pot on the windowsill (until…)
+  bool lampFallen = false; // the floor lamp got toppled
   double birdsUntil = -1;
   double zoomiesUntil = -1;
   double stormStart = -1;
@@ -118,6 +119,7 @@ class GameController extends ChangeNotifier {
     fallenItems.clear();
     boxPresent = false;
     flowerOnSill = true;
+    lampFallen = false;
     birdsUntil = -1;
     zoomiesUntil = -1;
     stormStart = -1;
@@ -417,7 +419,11 @@ class GameController extends ChangeNotifier {
     if (c.state != CatState.jumping) {
       final liftGoal = (c.state == CatState.perched ||
               c.state == CatState.watchingBirds ||
-              (c.state == CatState.sleeping && c.perchLift > 0))
+              (c.state == CatState.sleeping && c.perchLift > 0) ||
+              // stays up on the table while reaching for an item
+              ((c.state == CatState.mischiefWarning ||
+                      c.state == CatState.mischief) &&
+                  c.perchLift > 0))
           ? c.perchLift
           : 0.0;
       c.lift += (liftGoal - c.lift) * min(1.0, dt * 8);
@@ -431,6 +437,7 @@ class GameController extends ChangeNotifier {
               (c.afterWalk == CatState.perched ||
                   c.afterWalk == CatState.watchingBirds ||
                   c.afterWalk == CatState.sleeping);
+          c.target = null; // no stale targets (kept cats "playing" asleep)
           if (wantsPerch) {
             // real cats JUMP up — ballistic hop, then settle
             c.jumpFromLift = c.lift;
@@ -559,6 +566,18 @@ class GameController extends ChangeNotifier {
         break;
 
       case CatState.perched:
+        // sitting on the table, the paw reaches for an item all by
+        // itself… (classic cat physics)
+        if (c.perchLift == 82 &&
+            tableItems.isNotEmpty &&
+            c.stateT > 4 &&
+            _rng.nextDouble() < dt * 0.2) {
+          c.mischiefTarget = MischiefTarget.table;
+          c.state = CatState.mischiefWarning;
+          c.stateT = 0;
+          _onMischiefWarning(c);
+          break;
+        }
         // enjoying the view from up high, like real cats do
         if (c.stateT > 12 + c.id * 4 || c.worstNeed > 75) _hopDown(c);
         break;
@@ -795,6 +814,7 @@ class GameController extends ChangeNotifier {
       if (tableItems.isNotEmpty) MischiefTarget.table,
       if (tableItems.isNotEmpty) MischiefTarget.table,
       if (flowerOnSill) MischiefTarget.flower,
+      if (!lampFallen) MischiefTarget.lamp,
     ];
     c.mischiefTarget = choices[_rng.nextInt(choices.length)];
     final target = switch (c.mischiefTarget!) {
@@ -802,6 +822,7 @@ class GameController extends ChangeNotifier {
       MischiefTarget.wallpaper => RoomLayout.wallpaper,
       MischiefTarget.table => RoomLayout.table.grid + const Offset(0.4, 0.4),
       MischiefTarget.flower => const Offset(2.4, 0.35),
+      MischiefTarget.lamp => const Offset(13.5, 0.62),
     };
     _walkTo(c, target, CatState.mischiefWarning);
   }
@@ -830,6 +851,17 @@ class GameController extends ChangeNotifier {
         damage++;
         score -= 40;
         _addFx('fx_scratch', Iso.offsetToScene(c.pos) - const Offset(0, 60));
+        break;
+      case MischiefTarget.lamp:
+        if (!lampFallen) {
+          lampFallen = true;
+          damage++;
+          score -= 40;
+          sound.sfx('crash');
+          _addFx('fx_crash',
+              Iso.toScene(13.6, 0.3) - const Offset(0, 60),
+              big: true);
+        }
         break;
       case MischiefTarget.flower:
         if (flowerOnSill) {
@@ -928,13 +960,16 @@ class GameController extends ChangeNotifier {
           Offset(_rng.nextDouble() * 1.2 - 0.6,
               _rng.nextDouble() * 0.5 - 0.2);
       for (final c in cats) {
+        // sleeping, hiding and boxed-in cats are left alone!
         if (c.state != CatState.playing &&
             c.state != CatState.sleeping &&
+            c.state != CatState.hiding &&
             c.state != CatState.inBox) {
           c.state = CatState.playing;
           c.stateT = 0;
           c.target = nearWand();
         }
+        if (c.state != CatState.playing) continue;
         _moveCat(c, dt, 4.2);
         // dart to a new spot after a short pounce at the current one
         if (c.target != null &&
@@ -1023,6 +1058,11 @@ class GameController extends ChangeNotifier {
         _setIdle(kitten);
         _completeTask(TaskType.findToy);
         break;
+      case 'fixLamp':
+        lampFallen = false;
+        score += 10;
+        sound.sfx('pop');
+        break;
       case 'pickup':
         final item = job.item;
         if (item != null) {
@@ -1099,6 +1139,18 @@ class GameController extends ChangeNotifier {
       if ((scenePos - sp).distance < 42) {
         owner.job = OwnerJob(
             kind: 'pickup', target: item.pos, duration: 1.2, item: item);
+        return;
+      }
+    }
+
+    // 2b) toppled lamp: tap to set it upright
+    if (lampFallen) {
+      final lampP = Iso.toScene(14.0, 0.3);
+      if ((scenePos - (lampP - const Offset(35, 40))).distance < 75) {
+        owner.job = OwnerJob(
+            kind: 'fixLamp',
+            target: const Offset(13.4, 0.62),
+            duration: 1.5);
         return;
       }
     }

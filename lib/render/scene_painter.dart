@@ -432,7 +432,7 @@ class ScenePainter extends CustomPainter {
     if (tint.alpha != 0) {
       canvas.drawRect(Offset.zero & size, _fill(tint));
     }
-    if (game.phase == GamePhase.night) {
+    if (game.phase == GamePhase.night && !game.lampFallen) {
       final lampTop = Iso.toScene(14.0, 0.3) - const Offset(0, 120);
       final glow = Paint()
         ..shader = RadialGradient(colors: [
@@ -697,6 +697,7 @@ class ScenePainter extends CustomPainter {
     final c = Iso.toScene(14.0, 0.3);
     canvas.save();
     canvas.translate(c.dx, c.dy);
+    if (game.lampFallen) canvas.rotate(-1.25); // toppled over
     canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: 46, height: 14),
         _fill(const Color(0xFF8B6F52)));
     canvas.drawLine(const Offset(0, -4), const Offset(0, -106),
@@ -707,7 +708,7 @@ class ScenePainter extends CustomPainter {
       Offset(-27, -106), Offset(27, -106), Offset(17, -140), Offset(-17, -140),
     ]);
     canvas.drawPath(shade,
-        _fill(game.phase == GamePhase.night
+        _fill(game.phase == GamePhase.night && !game.lampFallen
             ? const Color(0xFFF7DC94)
             : const Color(0xFFF2CE7E)));
     canvas.drawPath(shade, _ink);

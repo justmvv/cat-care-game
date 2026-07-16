@@ -1,8 +1,17 @@
-/// Simple two-language localization (RU / EN), switchable in Settings.
+/// Localization: Russian, English, Dutch and Spanish,
+/// switchable in Settings (with country flags).
 library;
 
 class L10n {
   static String lang = 'ru';
+
+  /// Supported languages: code -> (flag, native name).
+  static const Map<String, (String, String)> languages = {
+    'ru': ('🇷🇺', 'Русский'),
+    'en': ('🇬🇧', 'English'),
+    'nl': ('🇳🇱', 'Nederlands'),
+    'es': ('🇪🇸', 'Español'),
+  };
 
   static String t(String key) =>
       _map[lang]?[key] ?? _map['en']![key] ?? key;
@@ -26,12 +35,12 @@ class L10n {
           '• МИСКА: кошки едят 2–3 раза в день. Заметили пузырь с миской — '
           'нажмите на миски и покормите.\n'
           '• ЛОТОК: чистите после использования. Кошка откажется ходить в грязный лоток '
-          'и будет кричать.\n'
+          'и оставит лужу рядом!\n'
           '• ИГРА: котятам нужно играть часто, взрослым — хотя бы 2 раза в день. '
           'Нажмите на корзину с игрушками.\n'
           '• КОГТИ: кошки точат когти — это природа! Если кошка царапает диван или обои, '
           'остановите её нажатием и предложите когтеточку.\n'
-          '• СТОЛ: кошки любят скидывать вещи. Успейте остановить!\n'
+          '• СТОЛ И ТОРШЕР: кошки любят скидывать вещи. Успейте остановить!\n'
           '• ЛАСКА: гладьте кошек — нажмите на кошку, когда она просит внимания.\n'
           '• ПТИЧКИ: наблюдение за птицами в окне — любимое кошачье ТВ. Не мешайте!\n\n'
           'Выполняйте задания вовремя, иначе кошки начнут ОРАТЬ. Удачи!',
@@ -131,11 +140,12 @@ class L10n {
       'helpBody':
           'Your day with Misty and kitten Biscuit lasts 10 minutes — morning to night.\n\n'
           '• BOWL: cats eat 2–3 times a day. See a food bubble — tap the bowls to feed.\n'
-          '• LITTER BOX: clean it after use. Cats refuse a dirty box and will yell about it.\n'
+          '• LITTER BOX: clean it after use. A cat refuses a dirty box and will leave '
+          'a puddle right next to it!\n'
           '• PLAY: kittens need frequent play, adults at least twice a day. Tap the toy basket.\n'
           '• CLAWS: scratching is natural! If a cat attacks the sofa or wallpaper, '
           'stop it with a tap and offer the scratching post.\n'
-          '• TABLE: cats love pushing things off. Be quick!\n'
+          '• TABLE & LAMP: cats love pushing things off. Be quick!\n'
           '• AFFECTION: pet the cats — tap a cat when it asks for attention.\n'
           '• BIRDS: bird-watching is cat TV. Let them enjoy it!\n\n'
           'Complete tasks in time or the cats will start YELLING. Good luck!',
@@ -218,6 +228,220 @@ class L10n {
       'hint_mischief': 'tap the naughty cat!',
       'hint_door': 'tap the door',
       'hint_toy': 'tap the sofa',
+    },
+    'nl': {
+      'appTitle': 'KATTENDAG',
+      'subtitle': 'Een striptrainer voor toekomstige kattenbaasjes',
+      'menuPlay': 'SPELEN',
+      'menuSettings': 'Instellingen',
+      'menuHelp': 'Verzorgingsgids',
+      'settingsTitle': 'Instellingen',
+      'sfx': 'Geluidseffecten',
+      'musicTitle': 'Achtergrondmuziek',
+      'musicName': '"Kitten on the Keys" · "The Entertainer" (ragtime, publiek domein)',
+      'langTitle': 'Язык / Language',
+      'back': 'Terug',
+      'helpTitle': 'Verzorgingsgids voor katten',
+      'helpBody':
+          'Je dag met Minoes en kitten Poekie duurt 10 minuten — van ochtend tot nacht.\n\n'
+          '• VOERBAK: katten eten 2–3 keer per dag. Zie je een voerballon — '
+          'tik op de bakjes om te voeren.\n'
+          '• KATTENBAK: maak hem schoon na gebruik. Een kat weigert een vieze bak '
+          'en laat er een plasje naast achter!\n'
+          '• SPELEN: kittens willen vaak spelen, volwassen katten minstens twee keer per dag. '
+          'Tik op de speelgoedmand.\n'
+          '• NAGELS: krabben is natuurlijk! Krabt een kat aan de bank of het behang, '
+          'stop haar met een tik en bied de krabpaal aan.\n'
+          '• TAFEL & LAMP: katten duwen graag dingen eraf. Wees er snel bij!\n'
+          '• AANDACHT: aai de katten — tik op een kat als ze om aandacht vraagt.\n'
+          '• VOGELTJES: vogels kijken is katten-tv. Laat ze genieten!\n\n'
+          'Voer taken op tijd uit, anders gaan de katten MAUWEN. Succes!',
+      'pauseTitle': 'Pauze',
+      'resume': 'Verder',
+      'restart': 'Opnieuw',
+      'quitToMenu': 'Hoofdmenu',
+      'scoreLabel': 'Punten',
+      'timeLabel': 'Tijd',
+      'tasksLabel': 'Taken',
+      'task_feed': 'Voer de katten',
+      'task_litter': 'Maak de kattenbak schoon',
+      'task_play': 'Speel met de katten',
+      'task_attention': 'Aai',
+      'task_mischief': 'Stop het kattenkwaad!',
+      'task_door': 'De deurbel — doe open!',
+      'task_toy': 'Pak de muis onder de bank vandaan',
+      'tip_post': 'Tip: een krabpaal redt je meubels. Iedereen blij!',
+      'tip_feed': 'Tip: voer katten volgens schema, 2–3 keer per dag.',
+      'tip_litter': 'Tip: een vieze kattenbak is oorzaak nr. 1 van ongelukjes.',
+      'tip_play': 'Tip: 15 minuten spelen per dag voorkomt kattenkwaad uit verveling.',
+      'tip_attention': 'Tip: katten hebben ook aandacht nodig. Maar alleen als ZIJ dat willen.',
+      'tip_box': 'Een doos! Kattenlogica: "Pas ik erin — dan zit ik erin."',
+      'tip_birds': 'Vogels kijken is katten-tv. Goed voor hun kopje!',
+      'tip_door_none': 'Er is niemand aan de deur.',
+      'tip_pickup': 'Ruim scherven meteen op — katten kunnen zich bezeren!',
+      'tip_zoomies': 'Avond-zoomies zijn normaal! Katten razen hun energie eruit.',
+      'tip_sleep': 'Katten slapen 12–16 uur per dag. Nooit wakker maken — dat is heilig.',
+      'tip_storm': 'Onweer! Katten zijn bang voor de donder — laat ze schuilen, dat is normaal.',
+      'tip_fly': 'Er vliegt een vlieg binnen! Het beste gratis fitnessapparaat voor katten.',
+      'tip_flower': 'Katten duwen graag potten om. Zet planten niet op de rand — en check of ze niet giftig zijn voor katten!',
+      'tip_accident': 'Een plasje?! De kat weigerde de vieze bak. Maak de bak op tijd schoon!',
+      'fx_crash': 'KNAL!',
+      'fx_meow': 'MIAUW!',
+      'fx_yowl': 'MI-AAA-UW!!!',
+      'fx_purr': 'prrr…',
+      'fx_scratch': 'krits-krats',
+      'fx_ding': 'DING!',
+      'fx_boom': 'KA-BOEM!',
+      'fx_oops': 'OEPS…',
+      'fx_no': 'NEE!',
+      'fx_zzz': 'zzz…',
+      'cat_adult': 'Minoes',
+      'cat_kitten': 'Poekie',
+      'phase_morning': 'Ochtend',
+      'phase_day': 'Middag',
+      'phase_evening': 'Avond',
+      'phase_night': 'Nacht',
+      'result_win': 'DAG OVERLEEFD!',
+      'result_lose': 'DE KATTEN ZIJN NIET BLIJ…',
+      'result_done': 'Taken voltooid',
+      'result_failed': 'Mislukt',
+      'result_damage': 'Kapotte spullen',
+      'result_learned': 'Wat je hebt geleerd:',
+      'learned_1': 'Voeren volgens schema',
+      'learned_2': 'De kattenbak schoon houden',
+      'learned_3': 'Elke dag spelen',
+      'learned_4': 'Nagels naar de krabpaal leiden',
+      'learned_5': 'Kattenrituelen respecteren',
+      'play_again': 'Nog een keer',
+      'win_3': 'Purr-fect kattenbaasje! 3 sterren!',
+      'win_2': 'Geweldig! De katten zijn bijna helemaal tevreden.',
+      'win_1': 'Niet slecht, maar er valt nog wat te leren.',
+      'win_0': 'De katten staken. Probeer het nog eens!',
+      'intro_text': 'Goedemorgen! Minoes en Poekie zijn al wakker.\n'
+          'Tik op voorwerpen en katten om voor ze te zorgen.\n'
+          'Hou de dag vol — 10 minuten!',
+      'start': 'Begin de dag',
+      'mood': 'Humeur',
+      'howto_title': 'Zo speel je:',
+      'howto_feed': '🍗 Voerbakjes (links) — voeren',
+      'howto_litter': '🧹 Kattenbak (bij de deur) — schoonmaken',
+      'howto_play': '🧶 Speelgoedmand — spelen',
+      'howto_cat': '🐾 Een kat — aaien of kattenkwaad stoppen',
+      'howto_task': '👆 Of tik op een taakkaart — het baasje doet het zelf',
+      'hint_feed': 'tik op de voerbakjes',
+      'hint_litter': 'tik op de kattenbak',
+      'hint_play': 'tik op de speelgoedmand',
+      'hint_attention': 'tik op de kat',
+      'hint_mischief': 'tik op de ondeugende kat!',
+      'hint_door': 'tik op de deur',
+      'hint_toy': 'tik op de bank',
+    },
+    'es': {
+      'appTitle': 'EL DÍA DEL GATO',
+      'subtitle': 'Un entrenador de cómic para futuros dueños de gatos',
+      'menuPlay': 'JUGAR',
+      'menuSettings': 'Ajustes',
+      'menuHelp': 'Guía de cuidados',
+      'settingsTitle': 'Ajustes',
+      'sfx': 'Efectos de sonido',
+      'musicTitle': 'Música de fondo',
+      'musicName': '"Kitten on the Keys" · "The Entertainer" (ragtime, dominio público)',
+      'langTitle': 'Язык / Language',
+      'back': 'Atrás',
+      'helpTitle': 'Guía de cuidados felinos',
+      'helpBody':
+          'Tu día con Michi y el gatito Bigotes dura 10 minutos — de la mañana a la noche.\n\n'
+          '• COMEDERO: los gatos comen 2–3 veces al día. ¿Ves un globo de comida? '
+          'Toca los comederos para alimentarlos.\n'
+          '• ARENERO: límpialo después de cada uso. ¡Un gato rechaza el arenero sucio '
+          'y dejará un charco al lado!\n'
+          '• JUEGO: los gatitos necesitan jugar a menudo; los adultos, al menos dos veces al día. '
+          'Toca la cesta de juguetes.\n'
+          '• UÑAS: ¡arañar es natural! Si un gato ataca el sofá o el papel pintado, '
+          'detenlo con un toque y ofrécele el rascador.\n'
+          '• MESA Y LÁMPARA: a los gatos les encanta tirar cosas. ¡Date prisa!\n'
+          '• CARIÑO: acaricia a los gatos — toca a un gato cuando pida atención.\n'
+          '• PAJARITOS: mirar pájaros es la tele de los gatos. ¡Déjalos disfrutar!\n\n'
+          'Completa las tareas a tiempo o los gatos empezarán a MAULLAR. ¡Suerte!',
+      'pauseTitle': 'Pausa',
+      'resume': 'Continuar',
+      'restart': 'Reiniciar',
+      'quitToMenu': 'Menú principal',
+      'scoreLabel': 'Puntos',
+      'timeLabel': 'Tiempo',
+      'tasksLabel': 'Tareas',
+      'task_feed': 'Da de comer a los gatos',
+      'task_litter': 'Limpia el arenero',
+      'task_play': 'Juega con los gatos',
+      'task_attention': 'Acaricia a',
+      'task_mischief': '¡Detén la travesura!',
+      'task_door': '¡El timbre — abre la puerta!',
+      'task_toy': 'Saca el ratón de debajo del sofá',
+      'tip_post': 'Consejo: el rascador salva tus muebles. ¡Todos contentos!',
+      'tip_feed': 'Consejo: alimenta a los gatos con horario, 2–3 veces al día.',
+      'tip_litter': 'Consejo: un arenero sucio es la causa nº 1 de accidentes.',
+      'tip_play': 'Consejo: 15 minutos de juego al día evitan travesuras por aburrimiento.',
+      'tip_attention': 'Consejo: los gatos también necesitan cariño. Pero solo cuando ELLOS quieren.',
+      'tip_box': '¡Una caja! Lógica felina: "Si quepo — me siento".',
+      'tip_birds': 'Mirar pájaros es la tele de los gatos. ¡Buenísimo para su mente!',
+      'tip_door_none': 'No hay nadie en la puerta.',
+      'tip_pickup': '¡Recoge los trozos enseguida — los gatos pueden hacerse daño!',
+      'tip_zoomies': '¡La locura nocturna es normal! Los gatos queman energía.',
+      'tip_sleep': 'Los gatos duermen 12–16 horas al día. No los despiertes — es sagrado.',
+      'tip_storm': '¡Tormenta! Los gatos temen los truenos — déjalos esconderse, es normal.',
+      'tip_fly': '¡Entró una mosca! El mejor gimnasio gratuito para gatos.',
+      'tip_flower': 'A los gatos les encanta tirar macetas. No pongas plantas al borde — ¡y comprueba que no sean tóxicas para gatos!',
+      'tip_accident': '¿¡Un charco!? El gato rechazó el arenero sucio. ¡Límpialo a tiempo!',
+      'fx_crash': '¡CRASH!',
+      'fx_meow': '¡MIAU!',
+      'fx_yowl': '¡¡¡MIA-A-AU!!!',
+      'fx_purr': 'prrr…',
+      'fx_scratch': 'ras-ras',
+      'fx_ding': '¡DING!',
+      'fx_boom': '¡BUUUM!',
+      'fx_oops': 'UPS…',
+      'fx_no': '¡NO!',
+      'fx_zzz': 'zzz…',
+      'cat_adult': 'Michi',
+      'cat_kitten': 'Bigotes',
+      'phase_morning': 'Mañana',
+      'phase_day': 'Día',
+      'phase_evening': 'Tarde',
+      'phase_night': 'Noche',
+      'result_win': '¡DÍA SUPERADO!',
+      'result_lose': 'LOS GATOS NO ESTÁN CONTENTOS…',
+      'result_done': 'Tareas completadas',
+      'result_failed': 'Falladas',
+      'result_damage': 'Cosas rotas',
+      'result_learned': 'Lo que has aprendido:',
+      'learned_1': 'Alimentar con horario',
+      'learned_2': 'Mantener limpio el arenero',
+      'learned_3': 'Jugar cada día',
+      'learned_4': 'Dirigir las uñas al rascador',
+      'learned_5': 'Respetar los rituales felinos',
+      'play_again': 'Jugar otra vez',
+      'win_3': '¡Dueño purr-fecto! ¡3 estrellas!',
+      'win_2': '¡Genial! Los gatos están casi del todo contentos.',
+      'win_1': 'No está mal, pero aún puedes mejorar.',
+      'win_0': 'Los gatos se han declarado en huelga. ¡Inténtalo de nuevo!',
+      'intro_text': '¡Buenos días! Michi y Bigotes ya están despiertos.\n'
+          'Toca los objetos y los gatos para cuidarlos.\n'
+          '¡Aguanta el día — 10 minutos!',
+      'start': 'Empezar el día',
+      'mood': 'Ánimo',
+      'howto_title': 'Cómo se juega:',
+      'howto_feed': '🍗 Comederos (izquierda) — alimentar',
+      'howto_litter': '🧹 Arenero (junto a la puerta) — limpiar',
+      'howto_play': '🧶 Cesta de juguetes — jugar',
+      'howto_cat': '🐾 Un gato — acariciar o detener travesuras',
+      'howto_task': '👆 O toca una tarjeta de tarea — el dueño lo hace solo',
+      'hint_feed': 'toca los comederos',
+      'hint_litter': 'toca el arenero',
+      'hint_play': 'toca la cesta de juguetes',
+      'hint_attention': 'toca al gato',
+      'hint_mischief': '¡toca al gato travieso!',
+      'hint_door': 'toca la puerta',
+      'hint_toy': 'toca el sofá',
     },
   };
 }

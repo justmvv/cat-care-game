@@ -31,7 +31,7 @@ enum TaskType { feed, cleanLitter, play, attention, stopMischief, openDoor, find
 
 enum BubbleIcon { food, play, litter, angry, heart, bird, exclaim, zzz, box, none }
 
-enum MischiefTarget { sofa, wallpaper, table, flower }
+enum MischiefTarget { sofa, wallpaper, table, flower, lamp }
 
 /// ------------------------------------------------------------------ world
 

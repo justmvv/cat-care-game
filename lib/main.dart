@@ -211,18 +211,14 @@ class SettingsScreen extends StatelessWidget {
               title: Text(L10n.t('langTitle'),
                   style: const TextStyle(fontWeight: FontWeight.w700)),
             ),
-            RadioListTile<String>(
-              title: const Text('Русский'),
-              value: 'ru',
-              groupValue: settings.lang,
-              onChanged: (v) => settings.lang = v!,
-            ),
-            RadioListTile<String>(
-              title: const Text('English'),
-              value: 'en',
-              groupValue: settings.lang,
-              onChanged: (v) => settings.lang = v!,
-            ),
+            for (final entry in L10n.languages.entries)
+              RadioListTile<String>(
+                title: Text('${entry.value.$1}  ${entry.value.$2}',
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                value: entry.key,
+                groupValue: settings.lang,
+                onChanged: (v) => settings.lang = v!,
+              ),
           ],
         ),
       ),

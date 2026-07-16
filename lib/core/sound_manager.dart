@@ -11,12 +11,9 @@ class SoundManager {
 
   final AppSettings settings;
 
-  final List<AudioPlayer> _pool =
-      List.generate(4, (_) => AudioPlayer()..setReleaseMode(ReleaseMode.stop));
-  int _poolIndex = 0;
-
   AudioPlayer? _music;
   bool _musicWanted = false;
+  bool _musicStarted = false;
 
   /// Ragtime playlist (both pieces are public domain), played in a loop.
   static const List<String> _playlist = [
@@ -36,6 +33,8 @@ class SoundManager {
   };
   final Map<String, int> _lastPlayed = {};
 
+  /// SFX use short-lived independent players so they can never be
+  /// affected by the music player's state (pause/stop/track change).
   Future<void> sfx(String name) async {
     if (!settings.sfxOn) return;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -43,9 +42,8 @@ class SoundManager {
     if (now - (_lastPlayed[name] ?? -100000) < cd) return;
     _lastPlayed[name] = now;
     try {
-      final player = _pool[_poolIndex];
-      _poolIndex = (_poolIndex + 1) % _pool.length;
-      await player.stop();
+      final player = AudioPlayer()..setReleaseMode(ReleaseMode.stop);
+      player.onPlayerComplete.listen((_) => player.dispose());
       await player.play(AssetSource('audio/$name.wav'), volume: 0.9);
     } catch (_) {}
   }
@@ -67,11 +65,18 @@ class SoundManager {
           _music!.onPlayerComplete.listen((_) {
             // next track in the playlist
             _track = (_track + 1) % _playlist.length;
-            if (_musicWanted && settings.musicOn) _playCurrentTrack();
+            _musicStarted = false;
+            if (_musicWanted && settings.musicOn) {
+              _musicStarted = true;
+              _playCurrentTrack();
+            }
           });
-          await _playCurrentTrack();
-        } else {
+        }
+        if (_musicStarted) {
           await _music!.resume();
+        } else {
+          _musicStarted = true;
+          await _playCurrentTrack();
         }
       } else {
         await _music?.pause();
@@ -96,9 +101,6 @@ class SoundManager {
 
   void dispose() {
     settings.removeListener(_onSettingsChanged);
-    for (final p in _pool) {
-      p.dispose();
-    }
     _music?.dispose();
     _music = null;
   }
