@@ -1,0 +1,21 @@
+name: cat_care_game
+description: "Cat Day — an educational comic-style game that teaches future cat owners how to care for cats. One in-game day lasts 10 minutes."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  audioplayers: ^6.1.0
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/audio/
