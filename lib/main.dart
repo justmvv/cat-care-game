@@ -25,6 +25,13 @@ class _CatCareAppState extends State<CatCareApp> {
   late final SoundManager sound = SoundManager(widget.settings);
 
   @override
+  void initState() {
+    super.initState();
+    // background ragtime plays in the menu as well as in the game
+    sound.musicWanted(true);
+  }
+
+  @override
   void dispose() {
     sound.dispose();
     super.dispose();
@@ -153,7 +160,11 @@ class MenuScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: GestureDetector(
-        onTap: onTap,
+        onTap: () {
+          // every menu tap doubles as the browser's audio-unlock gesture
+          sound.userGesture();
+          onTap();
+        },
         child: Container(
           width: 260,
           padding: EdgeInsets.symmetric(vertical: big ? 18 : 12),

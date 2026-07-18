@@ -1,5 +1,4 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'settings.dart';
 
@@ -41,49 +40,65 @@ class SoundManager {
     } catch (_) {}
   }
 
-  /// Called when the game screen opens: starts music if enabled in settings.
+  /// Enables/disables the background-music desire (menu + game).
   void musicWanted(bool wanted) {
     _musicWanted = wanted;
     _applyMusic();
   }
 
   bool _pausedByGame = false;
-  bool _webKickDone = false;
 
-  /// Call from any real user gesture (tap).
-  ///
-  /// Web browsers silently reject audio started outside a user gesture,
-  /// yet the player may still REPORT "playing" — so state checks are
-  /// useless. The reliable fix: exactly once, on the first tap, restart
-  /// the music from scratch synchronously inside the gesture call stack.
-  /// Native platforms autoplay fine and are left untouched.
-  void userGesture() {
-    if (!kIsWeb || _webKickDone) return;
-    if (!(_musicWanted && settings.musicOn)) return;
-    if (_pausedByGame) return;
-    _webKickDone = true;
+  /// True only once REAL playback progress has been observed. Browsers
+  /// can silently reject play() outside a user gesture while the player
+  /// still claims to be "playing", so position progress is the only
+  /// trustworthy signal.
+  bool _musicStarted = false;
+  DateTime _lastKick = DateTime.fromMillisecondsSinceEpoch(0);
+
+  Future<void> _startMusicFresh() async {
     try {
       _music?.dispose();
     } catch (_) {}
+    _musicStarted = false;
     try {
-      _music = AudioPlayer()..setReleaseMode(ReleaseMode.loop);
-      // no awaits before play(): the user-activation must survive
-      _music!.play(AssetSource('audio/ragtime_medley.wav'), volume: 0.45);
+      final p = AudioPlayer()..setReleaseMode(ReleaseMode.loop);
+      _music = p;
+      p.onPositionChanged.listen((pos) {
+        if (pos > Duration.zero) _musicStarted = true;
+      });
+      // no awaits before play(): a user-activation must survive
+      p.play(AssetSource('audio/ragtime_medley.wav'), volume: 0.45);
     } catch (_) {}
+  }
+
+  /// Call from any real user gesture (tap). While the music has never
+  /// ACTUALLY started, every tap (throttled) restarts it from scratch
+  /// inside the gesture call stack — self-healing on every platform.
+  /// Once playback truly runs, taps never touch it again.
+  void userGesture() {
+    if (_musicStarted) return;
+    if (!(_musicWanted && settings.musicOn)) return;
+    if (_pausedByGame) return;
+    final now = DateTime.now();
+    if (now.difference(_lastKick).inMilliseconds < 2000) return;
+    _lastKick = now;
+    _startMusicFresh();
   }
 
   void _onSettingsChanged() => _applyMusic();
 
   /// Both ragtime pieces live in one looping medley file — a native
   /// loop never depends on flaky "track completed" events.
+  ///
+  /// IMPORTANT: resume() on a player whose play() was silently blocked
+  /// by the browser is a no-op forever. So until playback has REALLY
+  /// started, always start from scratch instead of resuming.
   Future<void> _applyMusic() async {
     final shouldPlay = _musicWanted && settings.musicOn;
     try {
       if (shouldPlay) {
-        if (_music == null) {
-          _music = AudioPlayer()..setReleaseMode(ReleaseMode.loop);
-          await _music!
-              .play(AssetSource('audio/ragtime_medley.wav'), volume: 0.45);
+        if (_music == null || !_musicStarted) {
+          await _startMusicFresh();
         } else {
           await _music!.resume();
         }

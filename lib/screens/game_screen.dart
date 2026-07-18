@@ -30,7 +30,6 @@ class _GameScreenState extends State<GameScreen>
   void initState() {
     super.initState();
     game = GameController(widget.sound);
-    widget.sound.musicWanted(true);
     _ticker = createTicker((elapsed) {
       final now = elapsed.inMicroseconds / 1e6;
       final dt = (now - _lastT).clamp(0.0, 0.1);
@@ -45,7 +44,7 @@ class _GameScreenState extends State<GameScreen>
   @override
   void dispose() {
     _ticker.dispose();
-    widget.sound.musicWanted(false);
+    widget.sound.resumeAll(); // release a possible game-pause hold
     game.dispose();
     super.dispose();
   }
