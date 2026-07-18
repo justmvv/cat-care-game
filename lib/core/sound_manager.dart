@@ -46,16 +46,29 @@ class SoundManager {
     _applyMusic();
   }
 
+  DateTime _lastMusicKick = DateTime.fromMillisecondsSinceEpoch(0);
+  bool _pausedByGame = false;
+
   /// Call from any real user gesture (tap). Browsers block audio
-  /// autoplay until the user interacts — this retries the music then.
+  /// autoplay until the user interacts — this gently retries the music.
+  /// It must NEVER touch a player that is loading or already playing
+  /// (an earlier version disposed it on every tap and killed the music).
   void userGesture() {
     if (!(_musicWanted && settings.musicOn)) return;
+    if (_pausedByGame) return; // don't wake music during the pause veil
+    final now = DateTime.now();
+    if (now.difference(_lastMusicKick).inSeconds < 3) return;
+    _lastMusicKick = now;
     try {
-      if (_music == null || _music!.state != PlayerState.playing) {
-        _music?.dispose();
-        _music = null;
+      final st = _music?.state;
+      if (_music == null) {
         _applyMusic();
+      } else if (st == PlayerState.paused ||
+          st == PlayerState.stopped ||
+          st == PlayerState.completed) {
+        _music!.resume();
       }
+      // PlayerState.playing (or still loading): leave it alone.
     } catch (_) {}
   }
 
@@ -81,12 +94,16 @@ class SoundManager {
   }
 
   void pauseAll() {
+    _pausedByGame = true;
     try {
       _music?.pause();
     } catch (_) {}
   }
 
-  void resumeAll() => _applyMusic();
+  void resumeAll() {
+    _pausedByGame = false;
+    _applyMusic();
+  }
 
   void dispose() {
     settings.removeListener(_onSettingsChanged);

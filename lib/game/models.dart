@@ -182,7 +182,7 @@ class TaskItem {
       };
 }
 
-/// Comic onomatopoeia floating in the scene ("CRASH!", "МЯУ!").
+/// Comic onomatopoeia floating in the scene ("CRASH!", "MEOW!").
 class FxText {
   FxText(this.textKey, this.scenePos, this.until, {this.big = false});
   final String textKey;
