@@ -42,6 +42,22 @@ class GameController extends ChangeNotifier {
   bool boxPresent = false;
   bool flowerOnSill = true; // a flower pot on the windowsill (until…)
   bool lampFallen = false; // the floor lamp got toppled
+  bool curtainLeftTorn = false;
+  bool curtainRightTorn = false;
+
+  // --- the great escape ------------------------------------------------------
+  bool doorOpen = false;
+  int escapeStage = 0; // 0 calm, 1 cat bolting out, 2 panic/call/rescue
+  int escapedCatId = -1;
+  double _escapePhaseAt = 0;
+  double carrierUntil = -1; // the pet carrier stays visible until then
+  Offset? _panicTarget;
+
+  bool get ownerPanicking =>
+      escapeStage == 2 && elapsed - _escapePhaseAt < 5;
+  bool get ownerCalling =>
+      escapeStage == 2 && elapsed - _escapePhaseAt >= 5;
+  bool isCatEscaped(Cat c) => escapeStage >= 2 && c.id == escapedCatId;
   double birdsUntil = -1;
   double zoomiesUntil = -1;
   double stormStart = -1;
@@ -120,6 +136,13 @@ class GameController extends ChangeNotifier {
     boxPresent = false;
     flowerOnSill = true;
     lampFallen = false;
+    curtainLeftTorn = false;
+    curtainRightTorn = false;
+    doorOpen = false;
+    escapeStage = 0;
+    escapedCatId = -1;
+    carrierUntil = -1;
+    _panicTarget = null;
     birdsUntil = -1;
     zoomiesUntil = -1;
     stormStart = -1;
@@ -222,6 +245,32 @@ class GameController extends ChangeNotifier {
             _bubble(c, BubbleIcon.exclaim, 8);
           }
         }),
+        ScriptedEvent(320, () {
+          // the kitten discovers that curtains make a great climbing wall
+          final k = cats[1];
+          if ((!curtainLeftTorn || !curtainRightTorn) &&
+              k.state != CatState.sleeping &&
+              k.state != CatState.inBox) {
+            k.mischiefTarget = MischiefTarget.curtain;
+            k.curtainSide = !curtainLeftTorn ? 0 : 1;
+            _walkTo(
+                k,
+                k.curtainSide == 0
+                    ? const Offset(1.0, 0.45)
+                    : const Offset(3.85, 0.45),
+                CatState.mischiefWarning);
+          }
+        }),
+        ScriptedEvent(490, () {
+          // a draught swings the door open — close it, or else…!
+          doorOpen = true;
+          sound.sfx('pop');
+          _addFx('fx_ding',
+              Iso.offsetToScene(RoomLayout.door.grid) - const Offset(0, 120),
+              big: true);
+          _spawnTask(TaskType.closeDoor, 18);
+          _showTip('tip_door_open');
+        }),
         ScriptedEvent(355, () {
           _spawnTask(TaskType.findToy, 45);
           final kitten = cats[1];
@@ -291,9 +340,11 @@ class GameController extends ChangeNotifier {
     _spawnNeedTasks();
     _expireTasks();
     for (final c in cats) {
+      if (isCatEscaped(c)) continue; // she's out there somewhere…
       _updateCat(c, dt);
     }
     _updateOwner(dt);
+    _updateEscape(dt);
     _updateMood(dt);
 
     fx.removeWhere((f) => elapsed > f.until);
@@ -393,6 +444,55 @@ class GameController extends ChangeNotifier {
         for (final c in cats) {
           c.mood = max(0, c.mood - 8);
         }
+        // the door stayed open too long — a cat bolts!
+        if (t.type == TaskType.closeDoor && doorOpen) _startEscape();
+      }
+    }
+  }
+
+  // --- the escape drama -------------------------------------------------------
+
+  void _startEscape() {
+    if (escapeStage != 0) return;
+    final awake =
+        cats.where((c) => c.state != CatState.sleeping).toList();
+    final c = (awake.isEmpty ? cats : awake)[
+        _rng.nextInt(awake.isEmpty ? cats.length : awake.length)];
+    escapedCatId = c.id;
+    escapeStage = 1;
+    score -= 60;
+    c.perchLift = 0;
+    c.mischiefTarget = null;
+    c.state = CatState.walking;
+    c.afterWalk = CatState.idle;
+    c.target = const Offset(15.3, 0.42); // out the open door!
+    c.facingLeft = false;
+  }
+
+  void _updateEscape(double dt) {
+    if (escapeStage == 1) {
+      final c = cats[escapedCatId];
+      if (c.pos.dx > 14.2) {
+        escapeStage = 2; // gone. panic time.
+        _escapePhaseAt = elapsed;
+        owner.job = null;
+        _showTip('tip_escape');
+        sound.sfx('yowl');
+      }
+    } else if (escapeStage == 2) {
+      if (elapsed - _escapePhaseAt > 13) {
+        // the rescue service returns the grumpy runaway in a carrier
+        escapeStage = 0;
+        doorOpen = false;
+        carrierUntil = elapsed + 10;
+        final c = cats[escapedCatId];
+        c.pos = const Offset(11.9, 0.85);
+        _setIdle(c);
+        c.mood = max(0, c.mood - 20);
+        _bubble(c, BubbleIcon.angry, 7);
+        sound.sfx('meow');
+        _showTip('tip_return');
+        escapedCatId = -1;
       }
     }
   }
@@ -815,14 +915,25 @@ class GameController extends ChangeNotifier {
       if (tableItems.isNotEmpty) MischiefTarget.table,
       if (flowerOnSill) MischiefTarget.flower,
       if (!lampFallen) MischiefTarget.lamp,
+      // only the light kitten climbs curtains
+      if (c.isKitten && (!curtainLeftTorn || !curtainRightTorn))
+        MischiefTarget.curtain,
     ];
     c.mischiefTarget = choices[_rng.nextInt(choices.length)];
+    if (c.mischiefTarget == MischiefTarget.curtain) {
+      c.curtainSide = !curtainLeftTorn && !curtainRightTorn
+          ? _rng.nextInt(2)
+          : (!curtainLeftTorn ? 0 : 1);
+    }
     final target = switch (c.mischiefTarget!) {
       MischiefTarget.sofa => RoomLayout.sofa.grid + const Offset(-1.0, 0.6),
       MischiefTarget.wallpaper => RoomLayout.wallpaper,
       MischiefTarget.table => RoomLayout.table.grid + const Offset(0.4, 0.4),
       MischiefTarget.flower => const Offset(2.4, 0.35),
       MischiefTarget.lamp => const Offset(13.5, 0.62),
+      MischiefTarget.curtain => c.curtainSide == 0
+          ? const Offset(1.0, 0.45)
+          : const Offset(3.85, 0.45),
     };
     _walkTo(c, target, CatState.mischiefWarning);
   }
@@ -831,6 +942,8 @@ class GameController extends ChangeNotifier {
     _bubble(c, BubbleIcon.exclaim, 9);
     _spawnTask(TaskType.stopMischief, 9.5, catId: c.id);
     sound.sfx(c.isKitten ? 'meow_kitten' : 'meow');
+    // the kitten starts climbing UP the curtain
+    if (c.mischiefTarget == MischiefTarget.curtain) c.perchLift = 120;
   }
 
   void _applyMischiefDamage(Cat c) {
@@ -851,6 +964,25 @@ class GameController extends ChangeNotifier {
         damage++;
         score -= 40;
         _addFx('fx_scratch', Iso.offsetToScene(c.pos) - const Offset(0, 60));
+        break;
+      case MischiefTarget.curtain:
+        if (c.curtainSide == 0) {
+          curtainLeftTorn = true;
+        } else {
+          curtainRightTorn = true;
+        }
+        fallenItems.add(FallenItem(
+            'curtain',
+            c.curtainSide == 0
+                ? const Offset(1.0, 0.75)
+                : const Offset(3.85, 0.75)));
+        c.perchLift = 0; // the kitten tumbles down with its trophy
+        damage++;
+        score -= 40;
+        sound.sfx('crash');
+        _addFx('fx_crash', Iso.offsetToScene(c.pos) - const Offset(0, 130),
+            big: true);
+        _showTip('tip_curtain');
         break;
       case MischiefTarget.lamp:
         if (!lampFallen) {
@@ -909,6 +1041,34 @@ class GameController extends ChangeNotifier {
   OwnerJob? _lastJob;
 
   void _updateOwner(double dt) {
+    // during the escape the owner is beside himself: he runs around in
+    // a panic, then stops to call the pet rescue service
+    if (escapeStage == 2) {
+      owner.job = null;
+      _lastJob = null;
+      if (ownerPanicking) {
+        if (_panicTarget == null ||
+            (owner.pos - _panicTarget!).distance < 0.3) {
+          _panicTarget = _randomFloor();
+        }
+        owner.state = OwnerState.walking;
+        final d = _panicTarget! - owner.pos;
+        owner.pos = _stepToward(owner.pos, _panicTarget!, 5.2 * dt);
+        if (d.dx.abs() > 0.05) owner.facingLeft = d.dx < 0;
+      } else {
+        // walk to the phone spot and make the call
+        const spot = Offset(10.6, 0.8);
+        final d = spot - owner.pos;
+        if (d.distance > 0.25) {
+          owner.state = OwnerState.walking;
+          owner.pos = _stepToward(owner.pos, spot, 3.6 * dt);
+          if (d.dx.abs() > 0.05) owner.facingLeft = d.dx < 0;
+        } else {
+          owner.state = OwnerState.acting;
+        }
+      }
+      return;
+    }
     final job = owner.job;
     if (job == null) {
       owner.state = OwnerState.idle;
@@ -960,6 +1120,7 @@ class GameController extends ChangeNotifier {
           Offset(_rng.nextDouble() * 1.2 - 0.6,
               _rng.nextDouble() * 0.5 - 0.2);
       for (final c in cats) {
+        if (isCatEscaped(c)) continue;
         // sleeping, hiding and boxed-in cats are left alone!
         if (c.state != CatState.playing &&
             c.state != CatState.sleeping &&
@@ -994,6 +1155,7 @@ class GameController extends ChangeNotifier {
         _completeTask(TaskType.feed);
         // hungry cats react right away instead of waiting to "decide"
         for (final c in cats) {
+          if (isCatEscaped(c)) continue;
           if (c.hunger > 55 &&
               (c.state == CatState.idle ||
                   c.state == CatState.begging ||
@@ -1063,6 +1225,11 @@ class GameController extends ChangeNotifier {
         score += 10;
         sound.sfx('pop');
         break;
+      case 'closeDoor':
+        doorOpen = false;
+        sound.sfx('pop');
+        _completeTask(TaskType.closeDoor);
+        break;
       case 'pickup':
         final item = job.item;
         if (item != null) {
@@ -1098,6 +1265,7 @@ class GameController extends ChangeNotifier {
 
   void handleTap(Offset scenePos) {
     if (status != GameStatus.running) return;
+    if (escapeStage != 0) return; // the drama plays itself out
 
     // 1) cats — hit box matches the sprite; a begging cat routes the tap
     // to what it actually asks for (feed / play), so taps always "work"
@@ -1214,7 +1382,10 @@ class GameController extends ChangeNotifier {
           if (birdsActive) _showTip('tip_birds');
           break;
         case SpotId.door:
-          if (_hasActive(TaskType.openDoor)) {
+          if (doorOpen && _hasActive(TaskType.closeDoor)) {
+            owner.job =
+                OwnerJob(kind: 'closeDoor', target: hit.grid, duration: 1.0);
+          } else if (_hasActive(TaskType.openDoor)) {
             owner.job =
                 OwnerJob(kind: 'openDoor', target: hit.grid, duration: 1.2);
           } else {
@@ -1258,6 +1429,7 @@ class GameController extends ChangeNotifier {
         TaskType.cleanLitter => RoomLayout.litter.grid,
         TaskType.play => RoomLayout.toys.grid,
         TaskType.openDoor => RoomLayout.door.grid,
+        TaskType.closeDoor => RoomLayout.door.grid,
         TaskType.findToy => RoomLayout.sofa.grid,
         TaskType.attention ||
         TaskType.stopMischief =>
@@ -1307,6 +1479,10 @@ class GameController extends ChangeNotifier {
       case TaskType.openDoor:
         owner.job = OwnerJob(
             kind: 'openDoor', target: RoomLayout.door.grid, duration: 1.2);
+        break;
+      case TaskType.closeDoor:
+        owner.job = OwnerJob(
+            kind: 'closeDoor', target: RoomLayout.door.grid, duration: 1.0);
         break;
       case TaskType.findToy:
         owner.job = OwnerJob(

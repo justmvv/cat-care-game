@@ -18,6 +18,11 @@ class L10n {
 
   static const Map<String, Map<String, String>> _map = {
     'ru': {
+      'task_close': 'Сквозняк! Закрой дверь!',
+      'tip_curtain': 'Котёнок-альпинист сорвал штору! Шторы — любимый кошачий скалодром: закрепляйте карнизы надёжнее.',
+      'tip_door_open': 'Дверь распахнулась! Закройте скорее, пока никто не сбежал!',
+      'tip_escape': 'Кошка сбежала!!! Хозяин в панике звонит в службу спасения…',
+      'tip_return': 'Беглянку вернули в переноске. Следите за дверями и окнами — и чипируйте питомцев!',
       'appTitle': 'КОШКИН ДЕНЬ',
       'subtitle': 'Комикс-тренажёр будущего котовладельца',
       'menuPlay': 'ИГРАТЬ',
@@ -125,6 +130,11 @@ class L10n {
       'hint_toy': 'нажмите на диван',
     },
     'en': {
+      'task_close': 'A draught! Close the door!',
+      'tip_curtain': 'The climbing kitten tore the curtain down! Curtains are a cat climbing wall — fasten the rails well.',
+      'tip_door_open': 'The door swung open! Close it before someone escapes!',
+      'tip_escape': 'The cat escaped!!! The owner is panicking and calling the pet rescue service…',
+      'tip_return': 'The runaway is back in a carrier. Watch doors and windows — and microchip your pets!',
       'appTitle': "A CAT'S DAY",
       'subtitle': 'A comic-style trainer for future cat owners',
       'menuPlay': 'PLAY',
@@ -230,6 +240,11 @@ class L10n {
       'hint_toy': 'tap the sofa',
     },
     'nl': {
+      'task_close': 'Tocht! Doe de deur dicht!',
+      'tip_curtain': 'De klimmende kitten heeft het gordijn eraf getrokken! Gordijnen zijn een kattenklimwand — bevestig de rails stevig.',
+      'tip_door_open': 'De deur is opengewaaid! Doe hem dicht voordat iemand ontsnapt!',
+      'tip_escape': 'De kat is ontsnapt!!! Het baasje belt in paniek de dierenambulance…',
+      'tip_return': 'De weggelopen kat is terug in een reismand. Let op deuren en ramen — en chip je huisdieren!',
       'appTitle': 'KATTENDAG',
       'subtitle': 'Een striptrainer voor toekomstige kattenbaasjes',
       'menuPlay': 'SPELEN',
@@ -337,6 +352,11 @@ class L10n {
       'hint_toy': 'tik op de bank',
     },
     'es': {
+      'task_close': '¡Corriente de aire! ¡Cierra la puerta!',
+      'tip_curtain': '¡El gatito escalador arrancó la cortina! Las cortinas son un rocódromo felino — sujeta bien las barras.',
+      'tip_door_open': '¡La puerta se abrió de golpe! ¡Ciérrala antes de que alguien se escape!',
+      'tip_escape': '¡¡¡El gato se escapó!!! El dueño llama en pánico al servicio de rescate…',
+      'tip_return': 'El fugitivo vuelve en un transportín. Vigila puertas y ventanas — ¡y pon microchip a tus mascotas!',
       'appTitle': 'EL DÍA DEL GATO',
       'subtitle': 'Un entrenador de cómic para futuros dueños de gatos',
       'menuPlay': 'JUGAR',

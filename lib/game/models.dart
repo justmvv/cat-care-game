@@ -27,11 +27,20 @@ enum CatState {
 
 enum SpotId { bowl, litter, table, sofa, post, toys, window, door, rug, box }
 
-enum TaskType { feed, cleanLitter, play, attention, stopMischief, openDoor, findToy }
+enum TaskType {
+  feed,
+  cleanLitter,
+  play,
+  attention,
+  stopMischief,
+  openDoor,
+  closeDoor,
+  findToy,
+}
 
 enum BubbleIcon { food, play, litter, angry, heart, bird, exclaim, zzz, box, none }
 
-enum MischiefTarget { sofa, wallpaper, table, flower, lamp }
+enum MischiefTarget { sofa, wallpaper, table, flower, lamp, curtain }
 
 /// ------------------------------------------------------------------ world
 
@@ -96,6 +105,7 @@ class Cat {
   double lift = 0;
   double perchLift = 0; // target lift of the current perch
   double jumpFromLift = 0; // lift at the moment the jump started
+  int curtainSide = 0; // 0 = left curtain, 1 = right (climbing mischief)
 
   MischiefTarget? mischiefTarget;
   CatState afterWalk = CatState.idle;
@@ -167,6 +177,7 @@ class TaskItem {
         TaskType.attention => 'task_attention',
         TaskType.stopMischief => 'task_mischief',
         TaskType.openDoor => 'task_door',
+        TaskType.closeDoor => 'task_close',
         TaskType.findToy => 'task_toy',
       };
 }

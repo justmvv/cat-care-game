@@ -276,6 +276,7 @@ class _GameScreenState extends State<GameScreen>
         TaskType.attention => '💗',
         TaskType.stopMischief => '⚠️',
         TaskType.openDoor => '🚪',
+        TaskType.closeDoor => '🌬️',
         TaskType.findToy => '🐭',
       };
 
@@ -338,6 +339,7 @@ class _GameScreenState extends State<GameScreen>
         TaskType.attention => 'hint_attention',
         TaskType.stopMischief => 'hint_mischief',
         TaskType.openDoor => 'hint_door',
+        TaskType.closeDoor => 'hint_door',
         TaskType.findToy => 'hint_toy',
       };
 

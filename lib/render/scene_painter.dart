@@ -59,9 +59,13 @@ class ScenePainter extends CustomPainter {
       (Iso.depth(RoomLayout.litter.grid), () => _drawLitter(canvas)),
       for (final item in game.fallenItems)
         (Iso.depth(item.pos), () => _drawFallenItem(canvas, item)),
-      for (final c in game.cats) (_catDepth(c), () => _drawCat(canvas, c)),
+      for (final c in game.cats)
+        if (!game.isCatEscaped(c)) // the runaway is out of sight
+          (_catDepth(c), () => _drawCat(canvas, c)),
       if (game.boxPresent)
         (Iso.depth(RoomLayout.boxSpot.grid) + 0.01, () => _drawBox(canvas)),
+      if (game.elapsed < game.carrierUntil)
+        (0.86, () => _drawCarrier(canvas)),
       (_actorDepth(game.owner.pos, 0.03), () => _drawOwner(canvas)),
     ];
     entities.sort((a, b) => a.$1.compareTo(b.$1));
@@ -306,6 +310,9 @@ class ScenePainter extends CustomPainter {
           ..color = ink
           ..strokeWidth = 4);
     for (final side in [-1, 1]) {
+      // a torn-down curtain is missing (the kitten strikes again)
+      if (side < 0 && game.curtainLeftTorn) continue;
+      if (side > 0 && game.curtainRightTorn) continue;
       final cx = side < 0 ? win.left - 4 : win.right + 4;
       final cur = Path()
         ..moveTo(cx, win.top - 12)
@@ -322,18 +329,34 @@ class ScenePainter extends CustomPainter {
 
   void _drawDoor(Canvas canvas) {
     final door = Rect.fromLTRB(682, 296, 766, Iso.floorY - 12);
-    canvas.drawRect(door, _fill(const Color(0xFFBE9060)));
-    canvas.drawRect(door.deflate(10),
-        _ink..strokeWidth = 1.8);
-    canvas.drawRect(
-        Rect.fromLTRB(door.left + 16, door.top + 60, door.right - 16,
-            door.bottom - 16),
-        _ink);
-    _ink.strokeWidth = 2.5;
-    canvas.drawCircle(Offset(door.left + 12, door.center.dy + 10), 4.5,
-        _fill(const Color(0xFFF2CE7E)));
-    canvas.drawRect(door, _ink..strokeWidth = 3);
-    _ink.strokeWidth = 2.5;
+    if (game.doorOpen) {
+      // dark hallway behind + the door leaf swung open
+      canvas.drawRect(door, _fill(const Color(0xFF4A3A2A)));
+      canvas.drawRect(door, _ink..strokeWidth = 3);
+      _ink.strokeWidth = 2.5;
+      final leaf = _poly([
+        Offset(door.left, door.top),
+        Offset(door.left - 36, door.top + 16),
+        Offset(door.left - 36, door.bottom + 10),
+        Offset(door.left, door.bottom),
+      ]);
+      canvas.drawPath(leaf, _fill(const Color(0xFFBE9060)));
+      canvas.drawPath(leaf, _ink);
+      canvas.drawCircle(Offset(door.left - 28, door.center.dy + 14), 4,
+          _fill(const Color(0xFFF2CE7E)));
+    } else {
+      canvas.drawRect(door, _fill(const Color(0xFFBE9060)));
+      canvas.drawRect(door.deflate(10), _ink..strokeWidth = 1.8);
+      canvas.drawRect(
+          Rect.fromLTRB(door.left + 16, door.top + 60, door.right - 16,
+              door.bottom - 16),
+          _ink);
+      _ink.strokeWidth = 2.5;
+      canvas.drawCircle(Offset(door.left + 12, door.center.dy + 10), 4.5,
+          _fill(const Color(0xFFF2CE7E)));
+      canvas.drawRect(door, _ink..strokeWidth = 3);
+      _ink.strokeWidth = 2.5;
+    }
     // doormat
     final mat = Rect.fromCenter(
         center: Offset(door.center.dx, Iso.floorY + 26), width: 96, height: 22);
@@ -743,6 +766,37 @@ class ScenePainter extends CustomPainter {
     canvas.restore();
   }
 
+  /// The pet-rescue carrier the runaway cat came home in.
+  void _drawCarrier(Canvas canvas) {
+    final c = Iso.toScene(11.2, 0.82);
+    canvas.save();
+    canvas.translate(c.dx, c.dy);
+    final body = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: const Offset(0, -24), width: 74, height: 48),
+        const Radius.circular(10));
+    canvas.drawRRect(body, _fill(const Color(0xFFAEC9E0)));
+    canvas.drawRRect(body, _ink);
+    // grille door
+    final grille = Rect.fromCenter(
+        center: const Offset(16, -22), width: 30, height: 34);
+    canvas.drawRect(grille, _fill(const Color(0xFFF5E9D3)));
+    canvas.drawRect(grille, _ink..strokeWidth = 1.8);
+    for (double x = grille.left + 7; x < grille.right; x += 7) {
+      canvas.drawLine(Offset(x, grille.top + 2), Offset(x, grille.bottom - 2),
+          _ink);
+    }
+    _ink.strokeWidth = 2.5;
+    // handle
+    canvas.drawArc(
+        Rect.fromCenter(center: const Offset(0, -50), width: 34, height: 20),
+        3.14, 3.14, false,
+        Paint()
+          ..color = ink
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4);
+    canvas.restore();
+  }
+
   void _drawFallenItem(Canvas canvas, FallenItem item) {
     final c = Iso.offsetToScene(item.pos);
     canvas.save();
@@ -789,6 +843,34 @@ class ScenePainter extends CustomPainter {
               ..strokeWidth = 2.5);
         canvas.drawCircle(const Offset(40, -14), 5,
             _fill(const Color(0xFFF2AFC1)));
+        break;
+      case 'curtain':
+        // a heap of dusty-pink fabric on the floor
+        final fabric = _fill(const Color(0xFFE8B4B8));
+        canvas.drawOval(
+            Rect.fromCenter(
+                center: const Offset(0, -8), width: 52, height: 22),
+            fabric);
+        canvas.drawOval(
+            Rect.fromCenter(
+                center: const Offset(-10, -18), width: 30, height: 16),
+            fabric);
+        canvas.drawOval(
+            Rect.fromCenter(
+                center: const Offset(12, -16), width: 24, height: 14),
+            fabric);
+        canvas.drawOval(
+            Rect.fromCenter(
+                center: const Offset(0, -8), width: 52, height: 22),
+            _ink..strokeWidth = 1.8);
+        _ink.strokeWidth = 2.5;
+        // fold lines
+        final fold = Paint()
+          ..color = const Color(0x66A0666C)
+          ..strokeWidth = 1.6
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(const Offset(-14, -10), const Offset(-4, -16), fold);
+        canvas.drawLine(const Offset(2, -8), const Offset(12, -14), fold);
         break;
       case 'puddle':
         // the "accident" next to a dirty litter box
@@ -1230,7 +1312,8 @@ class ScenePainter extends CustomPainter {
 
     final walking = o.state == OwnerState.walking;
     final acting = o.state == OwnerState.acting;
-    final jobKind = o.job?.kind ?? '';
+    final jobKind =
+        game.ownerCalling ? 'phone' : (o.job?.kind ?? '');
     // gentle gait: slow leg swing + tiny body bob
     final legPh = walking ? sin(t * 7) * 8 : 0.0;
     final bob = walking ? -(sin(t * 14).abs()) * 1.6 : 0.0;
@@ -1349,6 +1432,16 @@ class ScenePainter extends CustomPainter {
         Rect.fromCenter(center: const Offset(1, -88), width: 12, height: 8),
         0.3, 2.4, false, smile);
     canvas.restore();
+
+    // panic marks while the cat is missing
+    if (game.ownerPanicking) {
+      _text(canvas, '!!', p - const Offset(0, 138 + 0), 24,
+          center: true, color: const Color(0xFFD97B6C), bold: true);
+      canvas.drawCircle(p + const Offset(-22, -118), 4,
+          _fill(const Color(0xFFC9DEF0)));
+      canvas.drawCircle(p + const Offset(26, -124), 3.5,
+          _fill(const Color(0xFFC9DEF0)));
+    }
   }
 
   /// A small tool in the owner's hand, depending on the current action.
@@ -1379,6 +1472,25 @@ class ScenePainter extends CustomPainter {
               hand + const Offset(8, -14),
             ]),
             _fill(const Color(0xFFA8C9C6)));
+        break;
+      case 'phone':
+        // calling the pet rescue service
+        final phone = RRect.fromRectAndRadius(
+            Rect.fromCenter(
+                center: hand + const Offset(4, -10), width: 12, height: 20),
+            const Radius.circular(3));
+        canvas.drawRRect(phone, _fill(const Color(0xFF5C4632)));
+        canvas.drawRect(
+            Rect.fromCenter(
+                center: hand + const Offset(4, -11), width: 8, height: 12),
+            _fill(const Color(0xFFC9DEF0)));
+        // speech dots
+        for (int i = 0; i < 3; i++) {
+          canvas.drawCircle(
+              hand + Offset(14.0 + i * 8, -28 - i * 4),
+              2.2 + sin(t * 6 + i) * 0.8,
+              _fill(const Color(0xFF8B7355)));
+        }
         break;
       case 'playPickup':
       case 'playSession':
