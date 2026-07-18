@@ -81,6 +81,14 @@ class GameController extends ChangeNotifier {
   Offset? tapMark;
   double tapMarkUntil = 0;
 
+  /// Game speed multiplier (1x / 2x), toggled from the HUD.
+  double timeScale = 1.0;
+  void toggleSpeed() {
+    timeScale = timeScale == 1.0 ? 2.0 : 1.0;
+    sound.sfx('pop');
+    notifyListeners();
+  }
+
   bool get birdsActive => elapsed < birdsUntil;
   bool get zoomiesActive => elapsed < zoomiesUntil;
   bool get stormActive => elapsed < stormUntil;
@@ -327,6 +335,7 @@ class GameController extends ChangeNotifier {
   void update(double dt) {
     if (status != GameStatus.running) return;
     if (dt > 0.1) dt = 0.1;
+    dt *= timeScale; // 2x fast-forward support
     elapsed += dt;
 
     for (final e in _script) {
@@ -531,7 +540,13 @@ class GameController extends ChangeNotifier {
 
     switch (c.state) {
       case CatState.walking:
-        _moveCat(c, dt, c.isKitten ? 3.2 : 2.7);
+        // hungry cats RUN to the bowl
+        _moveCat(
+            c,
+            dt,
+            c.afterWalk == CatState.eating
+                ? 4.5
+                : (c.isKitten ? 3.2 : 2.7));
         if (c.target == null || (c.pos - c.target!).distance < 0.2) {
           final wantsPerch = c.perchLift > 0 &&
               (c.afterWalk == CatState.perched ||
@@ -1266,6 +1281,21 @@ class GameController extends ChangeNotifier {
   void handleTap(Offset scenePos) {
     if (status != GameStatus.running) return;
     if (escapeStage != 0) return; // the drama plays itself out
+
+    // 0) stopping mischief is forgiving: a tap anywhere NEAR the
+    // naughty cat (including the table/sofa it is attacking) counts —
+    // otherwise a near-miss selected the furniture and did nothing
+    for (final c in cats) {
+      if (c.state != CatState.mischiefWarning &&
+          c.state != CatState.mischief) {
+        continue;
+      }
+      final sp = Iso.offsetToScene(c.pos) - Offset(0, c.lift);
+      if ((scenePos - (sp - const Offset(0, 40))).distance < 95) {
+        _stopMischief(c);
+        return;
+      }
+    }
 
     // 1) cats — hit box matches the sprite; a begging cat routes the tap
     // to what it actually asks for (feed / play), so taps always "work"

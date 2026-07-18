@@ -1043,6 +1043,17 @@ class ScenePainter extends CustomPainter {
     if (mischief) {
       // little excited hops while pouncing at the toy
       if (pouncing) canvas.translate(0, -(sin(t * 11).abs()) * 9);
+      // tail swishing behind the standing cat
+      final wag = sin(t * 6) * 6;
+      canvas.drawPath(
+          Path()
+            ..moveTo(-12, -12)
+            ..quadraticBezierTo(-34, -20 + wag, -38, -44 + wag),
+          Paint()
+            ..color = darkC
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 9
+            ..strokeCap = StrokeCap.round);
       final body = Path()
         ..addOval(Rect.fromCenter(
             center: const Offset(0, -30), width: 40, height: 66));
@@ -1051,6 +1062,16 @@ class ScenePainter extends CustomPainter {
         Rect.fromCenter(center: const Offset(-6, -44), width: 30, height: 34),
       ]);
       canvas.drawPath(body, _ink);
+      // hind legs the cat is standing on
+      for (final x in const [-11.0, 10.0]) {
+        canvas.drawOval(
+            Rect.fromCenter(center: Offset(x, -3), width: 17, height: 13),
+            _fill(catBase));
+        canvas.drawOval(
+            Rect.fromCenter(center: Offset(x, -3), width: 17, height: 13),
+            _ink..strokeWidth = 1.6);
+      }
+      _ink.strokeWidth = 2.5;
       final ph = sin(t * 14) * 5;
       final paw = _fill(catBase);
       canvas.drawOval(Rect.fromCenter(
@@ -1136,14 +1157,16 @@ class ScenePainter extends CustomPainter {
           Rect.fromCenter(center: const Offset(8, -6), width: 14, height: 12),
           _ink);
       _ink.strokeWidth = 2.5;
-      final headDown = eating ? 18.0 : 0.0;
+      // eating: head bobs down into the bowl, eyes OPEN (previously the
+      // closed eyes made dinner look like a nap)
+      final headDown = eating ? 13.0 + sin(t * 10) * 4 : 0.0;
       final happy = cat.state == CatState.petted ||
           cat.state == CatState.playing;
       canvas.save();
       canvas.translate(0, -62 + headDown);
       _drawCatHead(canvas, patchC, darkC, cat,
           mouthOpen: yowl,
-          eyesClosed: cat.state == CatState.petted || eating,
+          eyesClosed: cat.state == CatState.petted,
           happy: happy,
           scared: cat.state == CatState.hiding);
       canvas.restore();

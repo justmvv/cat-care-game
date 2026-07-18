@@ -111,6 +111,11 @@ class _GameScreenState extends State<GameScreen>
                           () => widget.settings.musicOn =
                               !widget.settings.musicOn),
                       const SizedBox(width: 6),
+                      _roundTextButton(
+                          game.timeScale == 2.0 ? '2×' : '1×',
+                          game.toggleSpeed,
+                          highlighted: game.timeScale == 2.0),
+                      const SizedBox(width: 6),
                       _roundButton(
                           game.status == GameStatus.paused
                               ? Icons.play_arrow
@@ -265,6 +270,34 @@ class _GameScreenState extends State<GameScreen>
           ],
         ),
         child: Icon(icon, size: 22, color: const Color(0xFF5C4632)),
+      ),
+    );
+  }
+
+  /// Round HUD button with text (used for the 1×/2× speed toggle).
+  Widget _roundTextButton(String label, VoidCallback onTap,
+      {bool highlighted = false}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: highlighted
+              ? const Color(0xFFF2CE7E)
+              : const Color(0xFFFFFDF5),
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFF5C4632), width: 2.5),
+          boxShadow: const [
+            BoxShadow(color: Color(0xFF5C4632), offset: Offset(2, 2)),
+          ],
+        ),
+        child: Text(label,
+            style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF5C4632))),
       ),
     );
   }
