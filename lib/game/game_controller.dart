@@ -307,8 +307,11 @@ class GameController extends ChangeNotifier {
           _spawnTask(TaskType.closeDoor, 18);
           _showTip('tip_door_open');
         }),
-        ScriptedEvent(355, () {
-          _spawnTask(TaskType.findToy, 45);
+        ScriptedEvent(300, () {
+          // a calm window and a generous deadline: previously (t=355,
+          // 45 s) the task quietly expired during the storm and every
+          // sofa tap afterwards silently did nothing
+          _spawnTask(TaskType.findToy, 70);
           final kitten = cats[1];
           kitten.target = RoomLayout.sofa.grid + const Offset(-0.8, 0.4);
           kitten.state = CatState.walking;
@@ -648,6 +651,12 @@ class GameController extends ChangeNotifier {
         break;
 
       case CatState.mischiefWarning:
+        // curtain: climb UP paw over paw during the whole warning
+        // (previously the lift snapped instantly — looked like hopping)
+        if (c.mischiefTarget == MischiefTarget.curtain) {
+          final k = (c.stateT / 4).clamp(0.0, 1.0);
+          c.lift = k * 120 + sin(c.stateT * 8) * 3;
+        }
         if (c.stateT > 4) {
           c.state = CatState.mischief;
           c.stateT = 0;
@@ -656,6 +665,10 @@ class GameController extends ChangeNotifier {
         break;
 
       case CatState.mischief:
+        // hanging high on the curtain, clawing and wobbling
+        if (c.mischiefTarget == MischiefTarget.curtain) {
+          c.lift = 120 + sin(c.stateT * 10) * 5;
+        }
         // dust puffs while scratching
         if (_rng.nextDouble() < dt * 6) {
           final sp = Iso.offsetToScene(c.pos) - const Offset(0, 34);

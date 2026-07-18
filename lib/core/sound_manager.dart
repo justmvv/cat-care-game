@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'settings.dart';
 
@@ -46,29 +47,28 @@ class SoundManager {
     _applyMusic();
   }
 
-  DateTime _lastMusicKick = DateTime.fromMillisecondsSinceEpoch(0);
   bool _pausedByGame = false;
+  bool _webKickDone = false;
 
-  /// Call from any real user gesture (tap). Browsers block audio
-  /// autoplay until the user interacts — this gently retries the music.
-  /// It must NEVER touch a player that is loading or already playing
-  /// (an earlier version disposed it on every tap and killed the music).
+  /// Call from any real user gesture (tap).
+  ///
+  /// Web browsers silently reject audio started outside a user gesture,
+  /// yet the player may still REPORT "playing" — so state checks are
+  /// useless. The reliable fix: exactly once, on the first tap, restart
+  /// the music from scratch synchronously inside the gesture call stack.
+  /// Native platforms autoplay fine and are left untouched.
   void userGesture() {
+    if (!kIsWeb || _webKickDone) return;
     if (!(_musicWanted && settings.musicOn)) return;
-    if (_pausedByGame) return; // don't wake music during the pause veil
-    final now = DateTime.now();
-    if (now.difference(_lastMusicKick).inSeconds < 3) return;
-    _lastMusicKick = now;
+    if (_pausedByGame) return;
+    _webKickDone = true;
     try {
-      final st = _music?.state;
-      if (_music == null) {
-        _applyMusic();
-      } else if (st == PlayerState.paused ||
-          st == PlayerState.stopped ||
-          st == PlayerState.completed) {
-        _music!.resume();
-      }
-      // PlayerState.playing (or still loading): leave it alone.
+      _music?.dispose();
+    } catch (_) {}
+    try {
+      _music = AudioPlayer()..setReleaseMode(ReleaseMode.loop);
+      // no awaits before play(): the user-activation must survive
+      _music!.play(AssetSource('audio/ragtime_medley.wav'), volume: 0.45);
     } catch (_) {}
   }
 

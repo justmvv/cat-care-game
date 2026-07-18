@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'core/settings.dart';
 import 'core/sound_manager.dart';
 import 'core/strings.dart';
+import 'core/version.dart';
 import 'screens/game_screen.dart';
 
 Future<void> main() async {
@@ -129,6 +130,14 @@ class MenuScreen extends StatelessWidget {
                     Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => const HelpScreen()));
                   }),
+                  const SizedBox(height: 22),
+                  const Text(
+                    'build $appBuild',
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0x995C4632)),
+                  ),
                 ],
               ),
             ),

@@ -59,7 +59,8 @@ class RoomLayout {
   static const toys = Spot(SpotId.toys, 3.4, 1.25, 0.8);
   static const table = Spot(SpotId.table, 5.6, 0.50, 1.2);
   static const boxSpot = Spot(SpotId.box, 6.4, 1.25, 0.8);
-  static const rug = Spot(SpotId.rug, 7.2, 1.05, 1.2);
+  // small tap radius: the rug must not steal taps aimed at the sofa
+  static const rug = Spot(SpotId.rug, 7.2, 1.05, 0.8);
   static const sofa = Spot(SpotId.sofa, 9.0, 0.75, 1.5);
   static const door = Spot(SpotId.door, 11.4, 0.50, 0.9); // approach point
   static const post = Spot(SpotId.post, 12.4, 0.85, 0.7);

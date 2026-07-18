@@ -509,6 +509,37 @@ class ScenePainter extends CustomPainter {
       final x = -86.0 + (i % 3) * 9 + (i ~/ 3) * 26;
       canvas.drawLine(Offset(x, -48), Offset(x + 5, -16), sp);
     }
+    // the lost toy mouse peeks out from under the sofa while the
+    // "fetch the mouse" task is active — shows WHERE to tap
+    if (game.activeTasks.any((t) => t.type == TaskType.findToy)) {
+      final wiggle = sin(t * 4) * 3;
+      canvas.save();
+      canvas.translate(-88 + wiggle, 8);
+      // tail
+      canvas.drawPath(
+          Path()
+            ..moveTo(10, 0)
+            ..quadraticBezierTo(22, -4 + wiggle, 28, 2),
+          Paint()
+            ..color = const Color(0xFF8A7F7B)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.2
+            ..strokeCap = StrokeCap.round);
+      // body + ear + eye + nose
+      canvas.drawOval(
+          Rect.fromCenter(center: Offset.zero, width: 22, height: 13),
+          _fill(const Color(0xFF9E938F)));
+      canvas.drawOval(
+          Rect.fromCenter(center: Offset.zero, width: 22, height: 13),
+          _ink..strokeWidth = 1.6);
+      _ink.strokeWidth = 2.5;
+      canvas.drawCircle(const Offset(-5, -7), 4,
+          _fill(const Color(0xFF9E938F)));
+      canvas.drawCircle(const Offset(-8, -2), 1.4, _fill(ink));
+      canvas.drawCircle(const Offset(-11, 1), 1.6,
+          _fill(const Color(0xFFE89A9A)));
+      canvas.restore();
+    }
     canvas.restore();
   }
 
