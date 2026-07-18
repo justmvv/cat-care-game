@@ -895,9 +895,8 @@ class ScenePainter extends CustomPainter {
 
   // ------------------------------------------------------------------ fly
 
-  Offset get _flyPos => Offset(
-      430 + sin(t * 1.1) * 230,
-      330 + sin(t * 2.3) * 70 + cos(t * 3.7) * 30);
+  // the controller owns the fly's path — the cats hunt the same point
+  Offset get _flyPos => game.flyScene;
 
   void _drawFly(Canvas canvas) {
     final p = _flyPos;

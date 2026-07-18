@@ -94,6 +94,20 @@ class GameController extends ChangeNotifier {
   bool get stormActive => elapsed < stormUntil;
   bool get flyActive => elapsed < flyUntil;
 
+  /// The fly's position in scene px (the renderer draws it here and the
+  /// cats hunt it — pauses together with the game clock).
+  Offset get flyScene => Offset(
+      430 + sin(elapsed * 1.1) * 230,
+      330 + sin(elapsed * 2.3) * 70 + cos(elapsed * 3.7) * 30);
+
+  /// Furniture height under a chasing cat: lets it hunt from on top
+  /// of the sofa or the table when the fly hovers there.
+  double _chaseBaseLift(Offset p) {
+    if (const Rect.fromLTRB(7.5, 0.05, 10.5, 0.95).contains(p)) return 50;
+    if (const Rect.fromLTRB(4.7, 0.05, 6.5, 0.68).contains(p)) return 82;
+    return 0;
+  }
+
   GamePhase get phase {
     if (elapsed < 150) return GamePhase.morning;
     if (elapsed < 390) return GamePhase.day;
@@ -218,13 +232,15 @@ class GameController extends ChangeNotifier {
           }
         }),
         ScriptedEvent(260, () {
-          // a fly gets in — free cat exercise!
+          // a fly gets in — the hunt is on!
           flyUntil = elapsed + 20;
           sound.sfx('buzz');
           _showTip('tip_fly');
           for (final c in cats) {
-            if (c.state != CatState.sleeping && c.state != CatState.inBox) {
-              c.state = CatState.zoomies;
+            if (c.state != CatState.sleeping &&
+                c.state != CatState.inBox &&
+                c.state != CatState.hiding) {
+              c.state = CatState.playing; // chase mode
               c.stateT = 0;
               c.target = null;
             }
@@ -376,6 +392,9 @@ class GameController extends ChangeNotifier {
         }
       }
     }
+
+    // the fly buzzes now and then while it is in the room
+    if (flyActive && _rng.nextDouble() < dt * 0.25) sound.sfx('buzz');
 
     // particles
     for (final p in particles) {
@@ -731,6 +750,21 @@ class GameController extends ChangeNotifier {
         break;
 
       case CatState.playing:
+        // fly hunt: run right under the fly, leap and swat at it;
+        // hunt from on top of the sofa/table when it hovers there
+        if (flyActive && owner.job?.kind != 'playSession') {
+          final flyX = (flyScene.dx - Iso.originX) / Iso.unit;
+          c.target = Offset(
+              flyX.clamp(0.8, 13.8), 0.55 + c.id * 0.35);
+          _moveCat(c, dt, c.isKitten ? 5.2 : 4.4);
+          final base = _chaseBaseLift(c.pos);
+          final dx = (c.pos.dx - flyX).abs();
+          final swat = dx < 0.9
+              ? (sin(elapsed * 7 + c.id * 2.1).abs()) * 44
+              : 0.0;
+          c.lift = base + swat;
+          break;
+        }
         // hop around the owner during a play session
         if (owner.job?.kind != 'playSession') _setIdle(c);
         break;
