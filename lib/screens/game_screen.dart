@@ -86,45 +86,55 @@ class _GameScreenState extends State<GameScreen>
               padding: const EdgeInsets.all(8),
               child: Column(
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _clockCard(),
-                      const SizedBox(width: 8),
-                      _catChip(game.cats[0]),
-                      const SizedBox(width: 6),
-                      _catChip(game.cats[1]),
-                      const Spacer(),
-                      _scoreCard(),
-                      const SizedBox(width: 8),
-                      _roundButton(
-                          widget.settings.sfxOn
-                              ? Icons.volume_up
-                              : Icons.volume_off,
-                          () => widget.settings.sfxOn =
-                              !widget.settings.sfxOn),
-                      const SizedBox(width: 6),
-                      _roundButton(
-                          widget.settings.musicOn
-                              ? Icons.music_note
-                              : Icons.music_off,
-                          () => widget.settings.musicOn =
-                              !widget.settings.musicOn),
-                      const SizedBox(width: 6),
-                      _roundTextButton(
-                          game.timeScale == 2.0 ? '2×' : '1×',
-                          game.toggleSpeed,
-                          highlighted: game.timeScale == 2.0),
-                      const SizedBox(width: 6),
-                      _roundButton(
-                          game.status == GameStatus.paused
-                              ? Icons.play_arrow
-                              : Icons.pause,
-                          _togglePause),
-                      const SizedBox(width: 6),
-                      _roundButton(
-                          Icons.home, () => Navigator.of(context).pop()),
-                    ],
+                  // scales down as one piece on narrow screens, so the
+                  // buttons on the right are never clipped off-screen
+                  SizedBox(
+                    width: double.infinity,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.topCenter,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _clockCard(),
+                          const SizedBox(width: 8),
+                          _catChip(game.cats[0]),
+                          const SizedBox(width: 6),
+                          _catChip(game.cats[1]),
+                          const SizedBox(width: 16),
+                          _scoreCard(),
+                          const SizedBox(width: 8),
+                          _roundButton(
+                              widget.settings.sfxOn
+                                  ? Icons.volume_up
+                                  : Icons.volume_off,
+                              () => widget.settings.sfxOn =
+                                  !widget.settings.sfxOn),
+                          const SizedBox(width: 6),
+                          _roundButton(
+                              widget.settings.musicOn
+                                  ? Icons.music_note
+                                  : Icons.music_off,
+                              () => widget.settings.musicOn =
+                                  !widget.settings.musicOn),
+                          const SizedBox(width: 6),
+                          _roundTextButton(
+                              game.timeScale == 2.0 ? '2×' : '1×',
+                              game.toggleSpeed,
+                              highlighted: game.timeScale == 2.0),
+                          const SizedBox(width: 6),
+                          _roundButton(
+                              game.status == GameStatus.paused
+                                  ? Icons.play_arrow
+                                  : Icons.pause,
+                              _togglePause),
+                          const SizedBox(width: 6),
+                          _roundButton(Icons.home,
+                              () => Navigator.of(context).pop()),
+                        ],
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Align(

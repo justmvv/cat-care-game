@@ -13,14 +13,6 @@ class SoundManager {
 
   AudioPlayer? _music;
   bool _musicWanted = false;
-  bool _musicStarted = false;
-
-  /// Ragtime playlist (both pieces are public domain), played in a loop.
-  static const List<String> _playlist = [
-    'kitten_on_the_keys',
-    'the_entertainer',
-  ];
-  int _track = 0;
 
   /// Minimal interval (seconds) between repeats of the same sound.
   static const Map<String, double> _cooldowns = {
@@ -56,38 +48,22 @@ class SoundManager {
 
   void _onSettingsChanged() => _applyMusic();
 
+  /// Both ragtime pieces live in one looping medley file — a native
+  /// loop never depends on flaky "track completed" events.
   Future<void> _applyMusic() async {
     final shouldPlay = _musicWanted && settings.musicOn;
     try {
       if (shouldPlay) {
         if (_music == null) {
-          _music = AudioPlayer()..setReleaseMode(ReleaseMode.stop);
-          _music!.onPlayerComplete.listen((_) {
-            // next track in the playlist
-            _track = (_track + 1) % _playlist.length;
-            _musicStarted = false;
-            if (_musicWanted && settings.musicOn) {
-              _musicStarted = true;
-              _playCurrentTrack();
-            }
-          });
-        }
-        if (_musicStarted) {
-          await _music!.resume();
+          _music = AudioPlayer()..setReleaseMode(ReleaseMode.loop);
+          await _music!
+              .play(AssetSource('audio/ragtime_medley.wav'), volume: 0.45);
         } else {
-          _musicStarted = true;
-          await _playCurrentTrack();
+          await _music!.resume();
         }
       } else {
         await _music?.pause();
       }
-    } catch (_) {}
-  }
-
-  Future<void> _playCurrentTrack() async {
-    try {
-      await _music?.play(AssetSource('audio/${_playlist[_track]}.wav'),
-          volume: 0.45);
     } catch (_) {}
   }
 

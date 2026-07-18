@@ -420,6 +420,9 @@ def main():
     write_wav(p('buzz.wav'), buzz())
     write_wav(p('kitten_on_the_keys.wav'), music(), gain=0.75)
     write_wav(p('the_entertainer.wav'), entertainer(), gain=0.75)
+    # one seamless looping medley (reliable across platforms)
+    medley = music() + silence(1.5) + entertainer() + silence(1.5)
+    write_wav(p('ragtime_medley.wav'), medley, gain=0.75)
 
 if __name__ == '__main__':
     main()
