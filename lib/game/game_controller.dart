@@ -231,6 +231,17 @@ class GameController extends ChangeNotifier {
             _walkTo(c, const Offset(2.4, 0.35), CatState.mischiefWarning);
           }
         }),
+        ScriptedEvent(245, () {
+          // the adult cat sizes up the floor lamp — stop her in time,
+          // or down it goes!
+          final c = cats[0];
+          if (!lampFallen &&
+              !isCatEscaped(c) &&
+              c.state != CatState.inBox) {
+            c.mischiefTarget = MischiefTarget.lamp;
+            _walkTo(c, const Offset(13.5, 0.62), CatState.mischiefWarning);
+          }
+        }),
         ScriptedEvent(260, () {
           // a fly gets in — the hunt is on!
           flyUntil = elapsed + 20;
@@ -270,10 +281,11 @@ class GameController extends ChangeNotifier {
           }
         }),
         ScriptedEvent(320, () {
-          // the kitten discovers that curtains make a great climbing wall
+          // the kitten discovers that curtains make a great climbing
+          // wall (it even wakes up from its nap for this — priorities!)
           final k = cats[1];
           if ((!curtainLeftTorn || !curtainRightTorn) &&
-              k.state != CatState.sleeping &&
+              !isCatEscaped(k) &&
               k.state != CatState.inBox) {
             k.mischiefTarget = MischiefTarget.curtain;
             k.curtainSide = !curtainLeftTorn ? 0 : 1;
@@ -614,6 +626,13 @@ class GameController extends ChangeNotifier {
         break;
 
       case CatState.begging:
+        // keep the "play" bubble visible while the mouse is lost, so the
+        // player always sees what the kitten wants
+        if (c.isKitten &&
+            _hasActive(TaskType.findToy) &&
+            c.bubble == BubbleIcon.none) {
+          _bubble(c, BubbleIcon.play, 5);
+        }
         // food has arrived — go eat
         if (c.hunger > 55 && foodInBowl > 0) {
           _walkTo(c, RoomLayout.bowl.grid + Offset(0.4 + c.id * 0.5, 0.3),
@@ -680,7 +699,10 @@ class GameController extends ChangeNotifier {
 
       case CatState.sleeping:
         _bubble(c, BubbleIcon.zzz, 1);
-        if (c.worstNeed > 85) _setIdle(c);
+        // daytime naps end on their own; night sleep (after ~21:00) lasts
+        if (c.worstNeed > 85 || (c.stateT > 45 && elapsed < 540)) {
+          _setIdle(c);
+        }
         break;
 
       case CatState.zoomies:
@@ -1345,20 +1367,21 @@ class GameController extends ChangeNotifier {
           _stopMischief(c);
         } else if (c.state == CatState.sleeping) {
           _showTip('tip_sleep');
+        } else if (c.isKitten && _hasActive(TaskType.findToy)) {
+          // while the mouse is lost, ANY tap on the kitten fetches it —
+          // regardless of its current bubble or state (previously this
+          // worked only during the 8-second speech bubble)
+          owner.job = OwnerJob(
+              kind: 'fetchToy',
+              target: RoomLayout.sofa.grid + const Offset(-1.2, 0.5),
+              duration: 2.0);
         } else if (c.state == CatState.begging &&
             c.bubble == BubbleIcon.food) {
           owner.job = OwnerJob(
               kind: 'feed', target: RoomLayout.bowl.grid, duration: 1.5);
         } else if (c.state == CatState.begging &&
             c.bubble == BubbleIcon.play) {
-          if (c.isKitten && _hasActive(TaskType.findToy)) {
-            // the kitten begs at the sofa for its lost mouse —
-            // tapping it fetches the mouse, not the teaser wand
-            owner.job = OwnerJob(
-                kind: 'fetchToy',
-                target: RoomLayout.sofa.grid + const Offset(-1.2, 0.5),
-                duration: 2.0);
-          } else if (!_playChainRunning) {
+          if (!_playChainRunning) {
             owner.job = OwnerJob(
                 kind: 'playPickup',
                 target: RoomLayout.toys.grid,
