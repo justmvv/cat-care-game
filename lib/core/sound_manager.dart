@@ -46,6 +46,19 @@ class SoundManager {
     _applyMusic();
   }
 
+  /// Call from any real user gesture (tap). Browsers block audio
+  /// autoplay until the user interacts — this retries the music then.
+  void userGesture() {
+    if (!(_musicWanted && settings.musicOn)) return;
+    try {
+      if (_music == null || _music!.state != PlayerState.playing) {
+        _music?.dispose();
+        _music = null;
+        _applyMusic();
+      }
+    } catch (_) {}
+  }
+
   void _onSettingsChanged() => _applyMusic();
 
   /// Both ragtime pieces live in one looping medley file — a native

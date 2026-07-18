@@ -1,12 +1,12 @@
 {
-    "name": "cat_care_game",
-    "short_name": "cat_care_game",
+    "name": "Кошкин день · A Cat's Day",
+    "short_name": "Кошкин день",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#F5E9D3",
+    "theme_color": "#E8A45C",
+    "description": "Комикс-игра, которая учит ухаживать за кошками. A comic game that teaches cat care.",
+    "orientation": "landscape",
     "prefer_related_applications": false,
     "icons": [
         {

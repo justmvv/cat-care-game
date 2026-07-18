@@ -58,7 +58,11 @@ class _GameScreenState extends State<GameScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5E9D3),
-      body: Stack(
+      // any tap counts as a user gesture: retries music if the browser
+      // blocked autoplay (web autoplay policy)
+      body: Listener(
+        onPointerDown: (_) => widget.sound.userGesture(),
+        child: Stack(
         children: [
           // ------------------------------------------------ scene
           Positioned.fill(
@@ -159,6 +163,7 @@ class _GameScreenState extends State<GameScreen>
           if (game.status == GameStatus.paused) _pausedOverlay(),
           if (game.status == GameStatus.finished) _resultOverlay(),
         ],
+        ),
       ),
     );
   }

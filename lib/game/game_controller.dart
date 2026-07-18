@@ -1317,7 +1317,14 @@ class GameController extends ChangeNotifier {
               kind: 'feed', target: RoomLayout.bowl.grid, duration: 1.5);
         } else if (c.state == CatState.begging &&
             c.bubble == BubbleIcon.play) {
-          if (!_playChainRunning) {
+          if (c.isKitten && _hasActive(TaskType.findToy)) {
+            // the kitten begs at the sofa for its lost mouse —
+            // tapping it fetches the mouse, not the teaser wand
+            owner.job = OwnerJob(
+                kind: 'fetchToy',
+                target: RoomLayout.sofa.grid + const Offset(-1.2, 0.5),
+                duration: 2.0);
+          } else if (!_playChainRunning) {
             owner.job = OwnerJob(
                 kind: 'playPickup',
                 target: RoomLayout.toys.grid,
