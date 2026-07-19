@@ -145,6 +145,16 @@ class MenuScreen extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         color: Color(0x995C4632)),
                   ),
+                  // music diagnostics: visible only while the music is
+                  // enabled but not audibly playing yet
+                  if (settings.musicOn && sound.musicStatus != 'playing')
+                    Text(
+                      '♪ ${sound.musicStatus}',
+                      style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFFB05A2E)),
+                    ),
                 ],
               ),
             ),

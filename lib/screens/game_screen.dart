@@ -139,6 +139,19 @@ class _GameScreenState extends State<GameScreen>
                       ),
                     ),
                   ),
+                  // music diagnostics while it is enabled but silent
+                  if (widget.settings.musicOn &&
+                      widget.sound.musicStatus != 'playing')
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '♪ ${widget.sound.musicStatus}',
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFB05A2E)),
+                      ),
+                    ),
                   const SizedBox(height: 6),
                   Align(
                     alignment: Alignment.centerRight,

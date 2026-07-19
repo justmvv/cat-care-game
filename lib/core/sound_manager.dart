@@ -55,20 +55,49 @@ class SoundManager {
   bool _musicStarted = false;
   DateTime _lastKick = DateTime.fromMillisecondsSinceEpoch(0);
 
+  /// Live diagnostics shown in the UI while the music is not audible:
+  /// 'starting' -> 'started?' -> 'playing', or 'ERR…: <cause>'.
+  String musicStatus = 'off';
+
   Future<void> _startMusicFresh() async {
     try {
       _music?.dispose();
     } catch (_) {}
     _musicStarted = false;
+    musicStatus = 'starting';
     try {
       final p = AudioPlayer()..setReleaseMode(ReleaseMode.loop);
       _music = p;
       p.onPositionChanged.listen((pos) {
-        if (pos > Duration.zero) _musicStarted = true;
+        if (pos > Duration.zero) {
+          _musicStarted = true;
+          musicStatus = 'playing';
+        }
       });
       // no awaits before play(): a user-activation must survive
-      p.play(AssetSource('audio/ragtime_medley.wav'), volume: 0.45);
-    } catch (_) {}
+      p.play(AssetSource('audio/ragtime_medley.wav'), volume: 0.45).then(
+        (_) {
+          if (musicStatus == 'starting') musicStatus = 'started?';
+        },
+        onError: (Object e) {
+          // medley missing/undecodable? fall back to the original track
+          // that shipped with every build since day one
+          musicStatus = 'ERR1: $e';
+          try {
+            p
+                .play(AssetSource('audio/kitten_on_the_keys.wav'),
+                    volume: 0.45)
+                .then((_) {}, onError: (Object e2) {
+              musicStatus = 'ERR2: $e2';
+            });
+          } catch (e2) {
+            musicStatus = 'ERR2b: $e2';
+          }
+        },
+      );
+    } catch (e) {
+      musicStatus = 'ERR0: $e';
+    }
   }
 
   /// Call from any real user gesture (tap). While the music has never
